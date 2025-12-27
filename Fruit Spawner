@@ -1,25 +1,15 @@
--- Full Fruit Spawner GUI Script
+-- Full Fruit Spawner GUI (No Orion, Draggable, Functional)
 local player = game.Players.LocalPlayer
-local mouse = player:GetMouse()
 
 -- ===== Fruits =====
 local Fruits = {
-    S = {"Dough","Dragon","Magma","Spiderman","Kitsune","Mammoth","T-Rex","Light","Gravity"},
-    A = {"Chainsawman","Portal","Revive","Hunter","Flame","Love","Snowman","Phoenix","Snow","Venom"},
-    B = {"Gum","Admin-Admin","Ope","Quake","Rumble"},
-    C = {"Barrier","Smoke","Paw","Barrier"},
-    D = {"Bomb","Shadow","Sand","Cold"}
+    "Dough","Dragon","Magma","Spiderman","Kitsune","Mammoth","T-Rex","Light","Gravity",
+    "Chainsawman","Portal","Revive","Hunter","Flame","Love","Snowman","Phoenix","Snow","Venom",
+    "Gum","Admin-Admin","Ope","Quake","Rumble",
+    "Barrier","Smoke","Paw",
+    "Bomb","Shadow","Sand","Cold"
 }
 
--- Flatten list for validation and dropdown
-local AllFruits = {}
-for _, list in pairs(Fruits) do
-    for _, fruit in ipairs(list) do
-        table.insert(AllFruits, fruit)
-    end
-end
-
--- Player Data
 local OwnedFruits = {}
 local EquippedFruit = nil
 local SelectedFruit = nil
@@ -33,50 +23,51 @@ screenGui.Parent = player:WaitForChild("PlayerGui")
 -- ===== Main Frame =====
 local frame = Instance.new("Frame")
 frame.Name = "MainFrame"
-frame.Size = UDim2.new(0, 300, 0, 200)
-frame.Position = UDim2.new(0.5, -150, 0.5, -100)
-frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-frame.BorderColor3 = Color3.fromRGB(255, 255, 255)
+frame.Size = UDim2.new(0, 300, 0, 220)
+frame.Position = UDim2.new(0.5, -150, 0.5, -110)
+frame.BackgroundColor3 = Color3.fromRGB(0,0,0)
+frame.BorderColor3 = Color3.fromRGB(255,255,255)
 frame.BorderSizePixel = 2
+frame.Active = true       -- Enables dragging
+frame.Draggable = true    -- Make frame draggable
 frame.Parent = screenGui
 
 -- Rounded corners
 local uicorner = Instance.new("UICorner")
-uicorner.CornerRadius = UDim.new(0, 10)
+uicorner.CornerRadius = UDim.new(0,10)
 uicorner.Parent = frame
 
 -- Title
 local title = Instance.new("TextLabel")
-title.Size = UDim2.new(1, 0, 0, 30)
-title.Position = UDim2.new(0, 0, 0, 0)
+title.Size = UDim2.new(1,0,0,30)
+title.Position = UDim2.new(0,0,0,0)
 title.BackgroundTransparency = 1
 title.Text = "Fruit Spawner"
-title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.TextColor3 = Color3.fromRGB(255,255,255)
 title.Font = Enum.Font.SourceSansBold
 title.TextScaled = true
 title.Parent = frame
 
--- ===== Dropdown (ScrollingFrame) =====
-local dropdownLabel = Instance.new("TextLabel")
-dropdownLabel.Size = UDim2.new(0.6, 0, 0, 30)
-dropdownLabel.Position = UDim2.new(0.05, 0, 0.2, 0)
-dropdownLabel.BackgroundColor3 = Color3.fromRGB(30,30,30)
-dropdownLabel.BorderColor3 = Color3.fromRGB(255,255,255)
-dropdownLabel.BorderSizePixel = 2
-dropdownLabel.Text = "Select Fruit"
-dropdownLabel.TextColor3 = Color3.fromRGB(255,255,255)
-dropdownLabel.Font = Enum.Font.SourceSans
-dropdownLabel.TextScaled = true
-dropdownLabel.Parent = frame
+-- ===== Dropdown (TextButton + ScrollingFrame) =====
+local dropdownButton = Instance.new("TextButton")
+dropdownButton.Size = UDim2.new(0.9,0,0,30)
+dropdownButton.Position = UDim2.new(0.05,0,0.2,0)
+dropdownButton.BackgroundColor3 = Color3.fromRGB(30,30,30)
+dropdownButton.BorderColor3 = Color3.fromRGB(255,255,255)
+dropdownButton.BorderSizePixel = 2
+dropdownButton.Text = "Select Fruit"
+dropdownButton.TextColor3 = Color3.fromRGB(255,255,255)
+dropdownButton.Font = Enum.Font.SourceSans
+dropdownButton.TextScaled = true
+dropdownButton.Parent = frame
 
 local uicornerDropdown = Instance.new("UICorner")
 uicornerDropdown.CornerRadius = UDim.new(0,5)
-uicornerDropdown.Parent = dropdownLabel
+uicornerDropdown.Parent = dropdownButton
 
--- Dropdown scrolling frame
 local dropdownList = Instance.new("ScrollingFrame")
-dropdownList.Size = UDim2.new(0.6, 0, 0.4, 0)
-dropdownList.Position = UDim2.new(0.05, 0, 0.35, 0)
+dropdownList.Size = UDim2.new(0.9,0,0.5,0)
+dropdownList.Position = UDim2.new(0.05,0,0.3,0)
 dropdownList.BackgroundColor3 = Color3.fromRGB(20,20,20)
 dropdownList.BorderColor3 = Color3.fromRGB(255,255,255)
 dropdownList.BorderSizePixel = 2
@@ -93,7 +84,7 @@ uicornerList.Parent = dropdownList
 local function populateDropdown()
     dropdownList:ClearAllChildren()
     local yPos = 0
-    for _, fruit in ipairs(AllFruits) do
+    for _, fruit in ipairs(Fruits) do
         local button = Instance.new("TextButton")
         button.Size = UDim2.new(1, -10, 0, 25)
         button.Position = UDim2.new(0,5,0,yPos)
@@ -107,7 +98,7 @@ local function populateDropdown()
         button.Parent = dropdownList
         button.MouseButton1Click:Connect(function()
             SelectedFruit = fruit
-            dropdownLabel.Text = fruit
+            dropdownButton.Text = fruit
             dropdownList.Visible = false
         end)
         yPos = yPos + 30
@@ -117,15 +108,14 @@ end
 
 populateDropdown()
 
--- Toggle dropdown
-dropdownLabel.MouseButton1Click:Connect(function()
+dropdownButton.MouseButton1Click:Connect(function()
     dropdownList.Visible = not dropdownList.Visible
 end)
 
 -- ===== Give Button =====
 local giveButton = Instance.new("TextButton")
-giveButton.Size = UDim2.new(0.35, 0, 0, 30)
-giveButton.Position = UDim2.new(0.05,0,0.75,0)
+giveButton.Size = UDim2.new(0.4,0,0,30)
+giveButton.Position = UDim2.new(0.05,0,0.85,0)
 giveButton.BackgroundColor3 = Color3.fromRGB(30,30,30)
 giveButton.BorderColor3 = Color3.fromRGB(255,255,255)
 giveButton.BorderSizePixel = 2
@@ -140,7 +130,7 @@ uicornerGive.CornerRadius = UDim.new(0,5)
 uicornerGive.Parent = giveButton
 
 giveButton.MouseButton1Click:Connect(function()
-    if not SelectedFruit or not table.find(AllFruits, SelectedFruit) then
+    if not SelectedFruit or not table.find(Fruits, SelectedFruit) and not table.find(AllFruits, SelectedFruit) then
         game.StarterGui:SetCore("SendNotification", {
             Title = "Fruit Spawner",
             Text = "Invalid Fruit!",
@@ -166,8 +156,8 @@ end)
 
 -- ===== Equip Button =====
 local equipButton = Instance.new("TextButton")
-equipButton.Size = UDim2.new(0.35, 0, 0, 30)
-equipButton.Position = UDim2.new(0.6,0,0.75,0)
+equipButton.Size = UDim2.new(0.4,0,0,30)
+equipButton.Position = UDim2.new(0.55,0,0.85,0)
 equipButton.BackgroundColor3 = Color3.fromRGB(30,30,30)
 equipButton.BorderColor3 = Color3.fromRGB(255,255,255)
 equipButton.BorderSizePixel = 2
@@ -196,35 +186,4 @@ equipButton.MouseButton1Click:Connect(function()
         Text = "Equipped: "..EquippedFruit,
         Duration = 3
     })
-end)
-
--- ===== Draggable =====
-local dragging = false
-local dragInput, mousePos, framePos
-
-frame.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragging = true
-        mousePos = input.Position
-        framePos = frame.Position
-        input.Changed:Connect(function()
-            if input.UserInputState == Enum.UserInputState.End then
-                dragging = false
-            end
-        end)
-    end
-end)
-
-frame.InputChanged:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseMovement then
-        dragInput = input
-    end
-end)
-
-game:GetService("UserInputService").InputChanged:Connect(function(input)
-    if input == dragInput and dragging then
-        local delta = input.Position - mousePos
-        frame.Position = UDim2.new(framePos.X.Scale, framePos.X.Offset + delta.X,
-                                   framePos.Y.Scale, framePos.Y.Offset + delta.Y)
-    end
 end)

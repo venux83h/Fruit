@@ -9,7 +9,7 @@ local playerGui = player:WaitForChild("PlayerGui")
 
 --// CONFIG
 local ITEMS_FOLDER_NAME = "Items"
-local COOLDOWN = 0.1
+local COOLDOWN = 0.6
 
 local itemsFolder = ReplicatedStorage:WaitForChild(ITEMS_FOLDER_NAME,10)
 local backpack = player:WaitForChild("Backpack")
@@ -20,6 +20,16 @@ local LegendaryFruits = ReplicatedStorage:WaitForChild("FRUITNOTIFSSPAWNS"):Wait
 --// UI COLORS
 local COLORS = {White=Color3.fromRGB(255,255,255), Black=Color3.fromRGB(28,28,30), Gray=Color3.fromRGB(40,40,40)}
 
+--// FRUITS LIST
+local fruits = {
+"Cold","Bomb","Barrier","Smoke","Chainsawman","Snowman","Spiderman","Portal","Ope",
+"Admin-Admin","Dough","Dragon","Flame","Lightning","Gum","Light","Magma","Pain",
+"Quake","Snow","Phoenix","Venom","Sound","Shadow","Sand","Spring","Gravity",
+"Revive","Mammoth","T-Rex","Love","Hunter","Kitsune","Warp","Nightmare",
+"Yeti","Gas","Arise","Beru","Kaisel","Guard","Wood","Tiger"
+}
+
+--// SCREENGUI
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "JAIX_HUB_GUI"
 screenGui.ResetOnSpawn = false
@@ -35,11 +45,6 @@ frame.Parent = screenGui
 Instance.new("UICorner", frame).CornerRadius = UDim.new(0,16)
 Instance.new("UIStroke", frame).Color = COLORS.White
 
---// GRADIENT
-local gradient = Instance.new("UIGradient", frame)
-gradient.Color = ColorSequence.new{ColorSequenceKeypoint.new(0,COLORS.Black),ColorSequenceKeypoint.new(1,COLORS.Gray)}
-gradient.Rotation = 90
-
 --// TITLE
 local title = Instance.new("TextButton", frame)
 title.Size = UDim2.new(1,-20,0,40)
@@ -51,7 +56,7 @@ title.TextSize = 22
 title.TextColor3 = COLORS.White
 title.TextXAlignment = Enum.TextXAlignment.Left
 
---// OPTIONS PANEL (right)
+--// OPTIONS PANEL
 local optionsFrame = Instance.new("Frame")
 optionsFrame.Size = UDim2.new(0,180,0,200)
 optionsFrame.Position = UDim2.new(0, frame.Position.X.Offset + frame.Size.X.Offset + 10, 0, frame.Position.Y.Offset)
@@ -97,18 +102,16 @@ createOptionButton("Get All Legendary Fruits", function()
     end
 end, 90)
 
--- Toggle options visibility
 title.MouseButton1Click:Connect(function()
     optionsFrame.Visible = not optionsFrame.Visible
     title.Text = optionsFrame.Visible and "JAIX HUB <" or "JAIX HUB >"
 end)
 
---// FRUIT SELECTION
+--// FRUIT SELECTION UI
 local inputBox = Instance.new("TextBox", frame)
 inputBox.Size = UDim2.new(1,-20,0,36)
 inputBox.Position = UDim2.new(0,10,0,60)
 inputBox.PlaceholderText = "Select or type fruit..."
-inputBox.Text = ""
 inputBox.ClearTextOnFocus = false
 inputBox.TextColor3 = COLORS.White
 inputBox.BackgroundColor3 = COLORS.Gray
@@ -143,20 +146,10 @@ scroll.Size = UDim2.new(1,-20,0,220)
 scroll.Position = UDim2.new(0,10,0,160)
 scroll.BackgroundColor3 = COLORS.Black
 scroll.BorderSizePixel = 0
-scroll.Parent = frame
 
 local uiListLayout = Instance.new("UIListLayout", scroll)
 uiListLayout.SortOrder = Enum.SortOrder.LayoutOrder
 uiListLayout.Padding = UDim.new(0,4)
-
---// FRUITS LIST
-local fruits = {
-"Cold","Bomb","Barrier","Smoke","Chainsawman","Snowman","Spiderman","Portal","Ope",
-"Admin-Admin","Dough","Dragon","Flame","Lightning","Gum","Light","Magma","Pain",
-"Quake","Snow","Phoenix","Venom","Sound","Shadow","Sand","Spring","Gravity",
-"Revive","Mammoth","T-Rex","Love","Hunter","Kitsune","Warp","Nightmare",
-"Yeti","Gas","Arise","Beru","Kaisel","Guard","Wood","Tiger"
-}
 
 --// UTILS
 local lastAction = 0
@@ -184,6 +177,7 @@ local function addItemByName(name,doAutoEquip)
     notify("Added "..tool.Name)
 end
 
+--// POPULATE FRUIT LIST
 local function populateList()
     scroll:ClearAllChildren()
     for i, fruitName in ipairs(fruits) do
@@ -191,7 +185,7 @@ local function populateList()
         btn.Size = UDim2.new(1,0,0,22)
         btn.BackgroundColor3 = COLORS.Gray
         btn.TextColor3 = COLORS.White
-        btn.Text = fruitName.."Fruit" -- no space
+        btn.Text = fruitName.."Fruit"
         btn.Parent = scroll
         Instance.new("UICorner", btn).CornerRadius = UDim.new(0,6)
         btn.MouseButton1Click:Connect(function()
@@ -203,24 +197,24 @@ local function populateList()
 end
 
 --// DRAG FUNCTION
-local function makeDraggable(frame)
+local function makeDraggable(main)
     local dragging,dragStart,startPos
-    frame.InputBegan:Connect(function(input)
+    main.InputBegan:Connect(function(input)
         if input.UserInputType==Enum.UserInputType.MouseButton1 or input.UserInputType==Enum.UserInputType.Touch then
             dragging=true
             dragStart=input.Position
-            startPos=frame.Position
+            startPos=main.Position
         end
     end)
-    frame.InputEnded:Connect(function(input)
+    main.InputEnded:Connect(function(input)
         if input.UserInputType==Enum.UserInputType.MouseButton1 or input.UserInputType==Enum.UserInputType.Touch then dragging=false end
     end)
     UserInputService.InputChanged:Connect(function(input)
         if dragging and (input.UserInputType==Enum.UserInputType.MouseMovement or input.UserInputType==Enum.UserInputType.Touch) then
             local delta=input.Position-dragStart
-            frame.Position=UDim2.new(startPos.X.Scale,startPos.X.Offset+delta.X,startPos.Y.Scale,startPos.Y.Offset+delta.Y)
-            -- keep optionsFrame aligned to main
-            optionsFrame.Position = UDim2.new(0, frame.Position.X.Offset + frame.Size.X.Offset + 10, 0, frame.Position.Y.Offset)
+            main.Position=UDim2.new(startPos.X.Scale,startPos.X.Offset+delta.X,startPos.Y.Scale,startPos.Y.Offset+delta.Y)
+            -- Keep options aligned
+            optionsFrame.Position = UDim2.new(0, main.Position.X.Offset + main.Size.X.Offset + 10, 0, main.Position.Y.Offset)
         end
     end)
 end

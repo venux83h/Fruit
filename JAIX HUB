@@ -11,45 +11,97 @@ local playerGui = player:WaitForChild("PlayerGui")
 local ITEMS_FOLDER_NAME = "Items"
 local COOLDOWN = 0.3
 
-local itemsFolder = ReplicatedStorage:WaitForChild(ITEMS_FOLDER_NAME, 10)
+local itemsFolder = ReplicatedStorage:WaitForChild(ITEMS_FOLDER_NAME,10)
 local backpack = player:WaitForChild("Backpack")
 local accessoryInventory = player:WaitForChild("AccessoryInventoryList")
 local swordInventory = player:WaitForChild("InventoryList")
 local LegendaryFruits = ReplicatedStorage:WaitForChild("FRUITNOTIFSSPAWNS"):WaitForChild("Legendary")
-local MythicalFruits = ReplicatedStorage:WaitForChild("FRUITNOTIFSSPAWNS"):WaitForChild("Mythical")
 
---// COLORS
+--// UI COLORS
 local COLORS = {White=Color3.fromRGB(255,255,255), Black=Color3.fromRGB(28,28,30), Gray=Color3.fromRGB(40,40,40)}
 
---// GUI
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "JAIX_HUB_GUI"
 screenGui.ResetOnSpawn = false
 screenGui.Parent = playerGui
 
+--// MAIN FRAME
 local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0,420,0,480)
-frame.Position = UDim2.new(0.5,-210,0.5,-240)
+frame.Size = UDim2.new(0,420,0,380)
+frame.Position = UDim2.new(0.5,-210,0.5,-190)
 frame.BackgroundColor3 = COLORS.Black
 frame.Active = true
 frame.Parent = screenGui
 Instance.new("UICorner", frame).CornerRadius = UDim.new(0,16)
 Instance.new("UIStroke", frame).Color = COLORS.White
 
+--// GRADIENT
 local gradient = Instance.new("UIGradient", frame)
 gradient.Color = ColorSequence.new{ColorSequenceKeypoint.new(0,COLORS.Black),ColorSequenceKeypoint.new(1,COLORS.Gray)}
 gradient.Rotation = 90
 
 --// TITLE
-local title = Instance.new("TextLabel", frame)
+local title = Instance.new("TextButton", frame)
 title.Size = UDim2.new(1,-20,0,40)
 title.Position = UDim2.new(0,10,0,8)
 title.BackgroundTransparency = 1
-title.Text = "JAIX HUB"
+title.Text = "JAIX HUB >"
 title.Font = Enum.Font.GothamBlack
 title.TextSize = 22
 title.TextColor3 = COLORS.White
 title.TextXAlignment = Enum.TextXAlignment.Left
+
+--// OPTIONS PANEL (right)
+local optionsFrame = Instance.new("Frame")
+optionsFrame.Size = UDim2.new(0,180,0,200)
+optionsFrame.Position = UDim2.new(0, frame.Position.X.Offset + frame.Size.X.Offset + 10, 0, frame.Position.Y.Offset)
+optionsFrame.BackgroundColor3 = COLORS.Black
+optionsFrame.Visible = false
+optionsFrame.Parent = screenGui
+Instance.new("UICorner", optionsFrame).CornerRadius = UDim.new(0,12)
+Instance.new("UIStroke", optionsFrame).Color = COLORS.White
+
+local function createOptionButton(text, callback, yPos)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(1,-20,0,30)
+    btn.Position = UDim2.new(0,10,0,yPos)
+    btn.BackgroundColor3 = COLORS.Black
+    btn.TextColor3 = COLORS.White
+    btn.Font = Enum.Font.GothamBold
+    btn.TextSize = 14
+    btn.Text = text
+    btn.Parent = optionsFrame
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0,6)
+    btn.MouseButton1Click:Connect(callback)
+end
+
+createOptionButton("Get All Swords", function()
+    for _, item in ipairs(swordInventory:GetChildren()) do
+        if item:IsA("BoolValue") then item.Value = true end
+    end
+end, 10)
+
+createOptionButton("Get All Accessories", function()
+    for _, item in ipairs(accessoryInventory:GetChildren()) do
+        if item:IsA("BoolValue") then item.Value = true end
+    end
+end, 50)
+
+createOptionButton("Get All Legendary Fruits", function()
+    for _, fruit in ipairs(LegendaryFruits:GetChildren()) do
+        local f = fruit:FindFirstChildOfClass("Tool") or fruit
+        if f then
+            local clone = f:Clone()
+            clone.Parent = backpack
+        end
+    end
+end, 90)
+
+-- Toggle options visibility
+title.MouseButton1Click:Connect(function()
+    optionsFrame.Visible = not optionsFrame.Visible
+    title.Text = optionsFrame.Visible and "JAIX HUB <" or "JAIX HUB >"
+end)
 
 --// FRUIT SELECTION
 local inputBox = Instance.new("TextBox", frame)
@@ -64,7 +116,7 @@ Instance.new("UICorner", inputBox).CornerRadius = UDim.new(0,10)
 
 local spawnBtn = Instance.new("TextButton", frame)
 spawnBtn.Size = UDim2.new(0.5,-12,0,38)
-spawnBtn.Position = UDim2.new(0,10,0,106)
+spawnBtn.Position = UDim2.new(0,10,0,100)
 spawnBtn.Text = "ADD FRUIT"
 spawnBtn.TextColor3 = COLORS.White
 spawnBtn.BackgroundColor3 = COLORS.Gray
@@ -72,7 +124,7 @@ Instance.new("UICorner", spawnBtn).CornerRadius = UDim.new(0,10)
 
 local autoEquipToggle = Instance.new("TextButton", frame)
 autoEquipToggle.Size = UDim2.new(0.5,-12,0,38)
-autoEquipToggle.Position = UDim2.new(0.5,2,0,106)
+autoEquipToggle.Position = UDim2.new(0.5,2,0,100)
 autoEquipToggle.Text = "AUTO EQUIP: OFF"
 autoEquipToggle.TextColor3 = COLORS.White
 autoEquipToggle.BackgroundColor3 = COLORS.Gray
@@ -80,21 +132,31 @@ Instance.new("UICorner", autoEquipToggle).CornerRadius = UDim.new(0,10)
 
 local listLabel = Instance.new("TextLabel", frame)
 listLabel.Size = UDim2.new(1,-20,0,20)
-listLabel.Position = UDim2.new(0,10,0,154)
+listLabel.Position = UDim2.new(0,10,0,140)
 listLabel.BackgroundTransparency = 1
 listLabel.Text = "FRUIT SELECTION"
 listLabel.TextColor3 = Color3.fromRGB(200,200,200)
 listLabel.TextXAlignment = Enum.TextXAlignment.Left
 
 local scroll = Instance.new("ScrollingFrame", frame)
-scroll.Size = UDim2.new(1,-20,0,200)
-scroll.Position = UDim2.new(0,10,0,180)
+scroll.Size = UDim2.new(1,-20,0,220)
+scroll.Position = UDim2.new(0,10,0,160)
 scroll.BackgroundColor3 = COLORS.Black
 scroll.BorderSizePixel = 0
+scroll.Parent = frame
 
 local uiListLayout = Instance.new("UIListLayout", scroll)
 uiListLayout.SortOrder = Enum.SortOrder.LayoutOrder
 uiListLayout.Padding = UDim.new(0,4)
+
+--// FRUITS LIST
+local fruits = {
+"Cold","Bomb","Barrier","Smoke","Chainsawman","Snowman","Spiderman","Portal","Ope",
+"Admin-Admin","Dough","Dragon","Flame","Lightning","Gum","Light","Magma","Pain",
+"Quake","Snow","Phoenix","Venom","Sound","Shadow","Sand","Spring","Gravity",
+"Revive","Mammoth","T-Rex","Love","Hunter","Kitsune","Warp","Nightmare",
+"Yeti","Gas","Arise","Beru","Kaisel","Guard","Wood","Tiger"
+}
 
 --// UTILS
 local lastAction = 0
@@ -111,11 +173,12 @@ local function addItemByName(name,doAutoEquip)
     if not model then notify("Fruit not found") return end
     local tool = model:FindFirstChildOfClass("Tool") or model
     if not tool then notify("No Tool inside "..ITEMS_FOLDER_NAME) return end
-    tool.Parent = backpack -- no clone, server handles actual give
+    local clone = tool:Clone()
+    clone.Parent = backpack
     if doAutoEquip and player.Character then
         local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
         if humanoid then
-            task.delay(0.05,function() pcall(function() humanoid:EquipTool(tool) end) end)
+            task.delay(0.05,function() pcall(function() humanoid:EquipTool(clone) end) end)
         end
     end
     notify("Added "..tool.Name)
@@ -123,60 +186,21 @@ end
 
 local function populateList()
     scroll:ClearAllChildren()
-    local fruitNames = {"Cold","Bomb","Barrier","Smoke","Chainsawman","Snowman","Spiderman","Portal","Ope","Admin-Admin","Dough","Dragon","Flame","Lightning","Gum","Light","Magma","Pain","Quake","Snow","Phoenix","Venom","Sound","Shadow","Sand","Spring","Gravity","Revive","Mammoth","T-Rex","Love","Hunter","Kitsune","Warp","Nightmare","Yeti","Gas","Arise","Beru","Kaisel","Guard","Wood","Tiger"}
-    for i,v in ipairs(fruitNames) do
+    for i, fruitName in ipairs(fruits) do
         local btn = Instance.new("TextButton")
         btn.Size = UDim2.new(1,0,0,22)
         btn.BackgroundColor3 = COLORS.Gray
         btn.TextColor3 = COLORS.White
-        btn.Text = v
+        btn.Text = fruitName.."Fruit" -- no space
         btn.Parent = scroll
         Instance.new("UICorner", btn).CornerRadius = UDim.new(0,6)
-        btn.MouseButton1Click:Connect(function() inputBox.Text = v end)
+        btn.MouseButton1Click:Connect(function()
+            inputBox.Text = fruitName
+        end)
     end
     task.wait()
-    scroll.CanvasSize = UDim2.new(0,0,0,uiListLayout.AbsoluteContentSize.Y+6)
+    scroll.CanvasSize = UDim2.new(0,0,0,uiListLayout.AbsoluteContentSize.Y + 6)
 end
-
---// GET ALL BUTTONS
-local function createGetAllButton(text, yPos, callback)
-    local btn = Instance.new("TextButton", frame)
-    btn.Size = UDim2.new(1,-20,0,36)
-    btn.Position = UDim2.new(0,10,0,yPos)
-    btn.BackgroundColor3 = COLORS.Gray
-    btn.TextColor3 = COLORS.White
-    btn.Text = text
-    btn.Font = Enum.Font.GothamBold
-    btn.TextSize = 16
-    Instance.new("UICorner", btn).CornerRadius = UDim.new(0,10)
-    btn.MouseButton1Click:Connect(callback)
-end
-
-createGetAllButton("Get All Swords", 390, function()
-    for _, item in ipairs(swordInventory:GetChildren()) do
-        if item:IsA("BoolValue") then item.Value = true end
-    end
-end)
-
-createGetAllButton("Get All Accessories", 430, function()
-    for _, item in ipairs(accessoryInventory:GetChildren()) do
-        if item:IsA("BoolValue") then item.Value = true end
-    end
-end)
-
-createGetAllButton("Get All Legendary Fruits", 470, function()
-    for _, fruit in ipairs(LegendaryFruits:GetChildren()) do
-        local tool = fruit:FindFirstChildOfClass("Tool") or fruit
-        if tool then tool.Parent = backpack end
-    end
-end)
-
-createGetAllButton("Get All Mythical Fruits", 510, function()
-    for _, fruit in ipairs(MythicalFruits:GetChildren()) do
-        local tool = fruit:FindFirstChildOfClass("Tool") or fruit
-        if tool then tool.Parent = backpack end
-    end
-end)
 
 --// DRAG FUNCTION
 local function makeDraggable(frame)
@@ -195,6 +219,8 @@ local function makeDraggable(frame)
         if dragging and (input.UserInputType==Enum.UserInputType.MouseMovement or input.UserInputType==Enum.UserInputType.Touch) then
             local delta=input.Position-dragStart
             frame.Position=UDim2.new(startPos.X.Scale,startPos.X.Offset+delta.X,startPos.Y.Scale,startPos.Y.Offset+delta.Y)
+            -- keep optionsFrame aligned to main
+            optionsFrame.Position = UDim2.new(0, frame.Position.X.Offset + frame.Size.X.Offset + 10, 0, frame.Position.Y.Offset)
         end
     end)
 end
@@ -216,6 +242,8 @@ UserInputService.InputBegan:Connect(function(input,gpe)
     if input.KeyCode==Enum.KeyCode.R then populateList()
     elseif input.KeyCode==Enum.KeyCode.Escape then
         frame.Visible = not frame.Visible
+        optionsFrame.Visible = false
+        title.Text = "JAIX HUB >"
     end
 end)
 
